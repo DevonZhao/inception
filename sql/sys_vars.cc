@@ -46,15 +46,15 @@
 #include "lock.h"
 #include "sql_time.h"                       // known_date_time_formats
 #include "sql_acl.h" // SUPER_ACL,
-                     // mysql_user_table_is_in_short_password_format
-                     // disconnect_on_expired_password
+// mysql_user_table_is_in_short_password_format
+// disconnect_on_expired_password
 #include "derror.h"  // read_texts
 #include "sql_base.h"                           // close_cached_tables
 #include "debug_sync.h"                         // DEBUG_SYNC
 #include "hostname.h"                           // host_cache_size
 #include "sql_show.h"                           // opt_ignore_db_dirs
 
-TYPELIB bool_typelib={ array_elements(bool_values)-1, "", bool_values, 0 };
+TYPELIB bool_typelib = { array_elements(bool_values) - 1, "", bool_values, 0 };
 
 /*
   This forward declaration is needed because including sql_base.h
@@ -72,73 +72,80 @@ extern void close_thread_tables(THD *thd);
 #define export /* not static */
 
 static Sys_var_charptr Sys_my_bind_addr(
-       "bind_address", "IP address to bind to.",
-       READ_ONLY GLOBAL_VAR(my_bind_addr_str), CMD_LINE(REQUIRED_ARG),
-       IN_FS_CHARSET, DEFAULT(MY_BIND_ALL_ADDRESSES));
+    "bind_address", "IP address to bind to.",
+    READ_ONLY GLOBAL_VAR(my_bind_addr_str), CMD_LINE(REQUIRED_ARG),
+    IN_FS_CHARSET, DEFAULT(MY_BIND_ALL_ADDRESSES));
 
 /*################*/
 static Sys_var_charptr Sys_character_sets_dir(
-       "character_sets_dir", "Directory where character sets are",
-       READ_ONLY GLOBAL_VAR(charsets_dir), CMD_LINE(REQUIRED_ARG),
-       IN_FS_CHARSET, DEFAULT(0));
+    "character_sets_dir", "Directory where character sets are",
+    READ_ONLY GLOBAL_VAR(charsets_dir), CMD_LINE(REQUIRED_ARG),
+    IN_FS_CHARSET, DEFAULT(0));
 
 /*################*/
 static Sys_var_struct Sys_character_set_system(
-       "character_set_system", "The character set used by the server "
-       "for storing identifiers",
-       READ_ONLY GLOBAL_VAR(system_charset_info), NO_CMD_LINE,
-       offsetof(CHARSET_INFO, csname), DEFAULT(0));
+    "character_set_system", "The character set used by the server "
+    "for storing identifiers",
+    READ_ONLY GLOBAL_VAR(system_charset_info), NO_CMD_LINE,
+    offsetof(CHARSET_INFO, csname), DEFAULT(0));
 
 static Sys_var_ulong Sys_connect_timeout(
-       "connect_timeout",
-       "The number of seconds the mysqld server is waiting for a connect "
-       "packet before responding with 'Bad handshake'",
-       GLOBAL_VAR(connect_timeout), CMD_LINE(REQUIRED_ARG),
-       VALID_RANGE(2, LONG_TIMEOUT), DEFAULT(CONNECT_TIMEOUT), BLOCK_SIZE(1));
+    "connect_timeout",
+    "The number of seconds the mysqld server is waiting for a connect "
+    "packet before responding with 'Bad handshake'",
+    GLOBAL_VAR(connect_timeout), CMD_LINE(REQUIRED_ARG),
+    VALID_RANGE(2, LONG_TIMEOUT), DEFAULT(CONNECT_TIMEOUT), BLOCK_SIZE(1));
 
 static Sys_var_ulong Sys_interactive_timeout(
-       "interactive_timeout",
-       "The number of seconds the server waits for activity on an interactive "
-       "connection before closing it",
-       SESSION_VAR(net_interactive_timeout),
-       CMD_LINE(REQUIRED_ARG),
-       VALID_RANGE(1, LONG_TIMEOUT), DEFAULT(NET_WAIT_TIMEOUT), BLOCK_SIZE(1));
+    "interactive_timeout",
+    "The number of seconds the server waits for activity on an interactive "
+    "connection before closing it",
+    SESSION_VAR(net_interactive_timeout),
+    CMD_LINE(REQUIRED_ARG),
+    VALID_RANGE(1, LONG_TIMEOUT), DEFAULT(NET_WAIT_TIMEOUT), BLOCK_SIZE(1));
 
-static bool
-check_max_allowed_packet(sys_var *self, THD *thd,  set_var *var)
+#ifndef DBUG_OFF
+static Sys_var_dbug Sys_dbug(
+    "debug", "Debug log", sys_var::SESSION,
+    CMD_LINE(OPT_ARG, '#'), DEFAULT(""), NO_MUTEX_GUARD, NOT_IN_BINLOG,
+    ON_CHECK(0));
+#endif
+
+static bool check_max_allowed_packet(sys_var *self, THD *thd,  set_var *var)
 {
-  longlong val;
-  val= var->save_result.ulonglong_value;
-  if (val < (longlong) global_system_variables.net_buffer_length)
-  {
-    push_warning_printf(thd, Sql_condition::WARN_LEVEL_WARN,
-                        WARN_OPTION_BELOW_LIMIT, ER(WARN_OPTION_BELOW_LIMIT),
-                        "max_allowed_packet", "net_buffer_length");
-  }
-  return false;
+    longlong val;
+    val = var->save_result.ulonglong_value;
+
+    if (val < (longlong) global_system_variables.net_buffer_length) {
+        push_warning_printf(thd, Sql_condition::WARN_LEVEL_WARN,
+                            WARN_OPTION_BELOW_LIMIT, ER(WARN_OPTION_BELOW_LIMIT),
+                            "max_allowed_packet", "net_buffer_length");
+    }
+
+    return false;
 }
 
 static Sys_var_ulong Sys_max_allowed_packet(
-       "max_allowed_packet",
-       "Max packet length to send to or receive from the server",
-       SESSION_VAR(max_allowed_packet), CMD_LINE(REQUIRED_ARG),
-       VALID_RANGE(1024, 1024 * 1024 * 1024), DEFAULT(1024 * 1024 * 1024),
-       BLOCK_SIZE(1024), NO_MUTEX_GUARD, NOT_IN_BINLOG,
-       ON_CHECK(check_max_allowed_packet));
+    "max_allowed_packet",
+    "Max packet length to send to or receive from the server",
+    SESSION_VAR(max_allowed_packet), CMD_LINE(REQUIRED_ARG),
+    VALID_RANGE(1024, 1024 * 1024 * 1024), DEFAULT(1024 * 1024 * 1024),
+    BLOCK_SIZE(1024), NO_MUTEX_GUARD, NOT_IN_BINLOG,
+    ON_CHECK(check_max_allowed_packet));
 
 static Sys_var_ulong Sys_max_connections(
-       "max_connections", "The number of simultaneous clients allowed",
-       GLOBAL_VAR(max_connections), CMD_LINE(REQUIRED_ARG),
-       VALID_RANGE(1, 100000),
-       DEFAULT(MAX_CONNECTIONS_DEFAULT),
-       BLOCK_SIZE(1),
-       NO_MUTEX_GUARD,
-       NOT_IN_BINLOG,
-       ON_CHECK(0),
-       NULL,
-       NULL,
-       /* max_connections is used as a sizing hint by the performance schema. */
-       sys_var::PARSE_EARLY);
+    "max_connections", "The number of simultaneous clients allowed",
+    GLOBAL_VAR(max_connections), CMD_LINE(REQUIRED_ARG),
+    VALID_RANGE(1, 100000),
+    DEFAULT(MAX_CONNECTIONS_DEFAULT),
+    BLOCK_SIZE(1),
+    NO_MUTEX_GUARD,
+    NOT_IN_BINLOG,
+    ON_CHECK(0),
+    NULL,
+    NULL,
+    /* max_connections is used as a sizing hint by the performance schema. */
+    sys_var::PARSE_EARLY);
 
 // static Sys_var_harows Sys_select_limit(
 //        "sql_select_limit",
@@ -147,63 +154,65 @@ static Sys_var_ulong Sys_max_connections(
 //        VALID_RANGE(0, HA_POS_ERROR), DEFAULT(HA_POS_ERROR), BLOCK_SIZE(1));
 
 static Sys_var_ulong Sys_max_connect_errors(
-       "max_connect_errors",
-       "If there is more than this number of interrupted connections from "
-       "a host this host will be blocked from further connections",
-       GLOBAL_VAR(max_connect_errors), CMD_LINE(REQUIRED_ARG),
-       VALID_RANGE(1, ULONG_MAX), DEFAULT(100),
-       BLOCK_SIZE(1));
+    "max_connect_errors",
+    "If there is more than this number of interrupted connections from "
+    "a host this host will be blocked from further connections",
+    GLOBAL_VAR(max_connect_errors), CMD_LINE(REQUIRED_ARG),
+    VALID_RANGE(1, ULONG_MAX), DEFAULT(100),
+    BLOCK_SIZE(1));
 
-static bool 
-check_net_buffer_length(sys_var *self, THD *thd,  set_var *var)
+static bool check_net_buffer_length(sys_var *self, THD *thd,  set_var *var)
 {
-  longlong val;
-  val= var->save_result.ulonglong_value;
-  if (val > (longlong) global_system_variables.max_allowed_packet)
-  {
-    push_warning_printf(thd, Sql_condition::WARN_LEVEL_WARN,
-                        WARN_OPTION_BELOW_LIMIT, ER(WARN_OPTION_BELOW_LIMIT),
-                        "max_allowed_packet", "net_buffer_length");
-  }
-  return false;
+    longlong val;
+    val = var->save_result.ulonglong_value;
+
+    if (val > (longlong) global_system_variables.max_allowed_packet) {
+        push_warning_printf(thd, Sql_condition::WARN_LEVEL_WARN,
+                            WARN_OPTION_BELOW_LIMIT, ER(WARN_OPTION_BELOW_LIMIT),
+                            "max_allowed_packet", "net_buffer_length");
+    }
+
+    return false;
 }
 
 static Sys_var_ulong Sys_net_buffer_length(
-       "net_buffer_length",
-       "Buffer length for TCP/IP and socket communication",
-       SESSION_VAR(net_buffer_length), CMD_LINE(REQUIRED_ARG),
-       VALID_RANGE(1024, 1024*1024), DEFAULT(16384), BLOCK_SIZE(1024),
-       NO_MUTEX_GUARD, NOT_IN_BINLOG, ON_CHECK(check_net_buffer_length));
+    "net_buffer_length",
+    "Buffer length for TCP/IP and socket communication",
+    SESSION_VAR(net_buffer_length), CMD_LINE(REQUIRED_ARG),
+    VALID_RANGE(1024, 1024 * 1024), DEFAULT(16384), BLOCK_SIZE(1024),
+    NO_MUTEX_GUARD, NOT_IN_BINLOG, ON_CHECK(check_net_buffer_length));
 
 static bool fix_net_read_timeout(sys_var *self, THD *thd, enum_var_type type)
 {
-  if (type != OPT_GLOBAL)
-    my_net_set_read_timeout(&thd->net, thd->variables.net_read_timeout);
-  return false;
+    if (type != OPT_GLOBAL)
+        my_net_set_read_timeout(&thd->net, thd->variables.net_read_timeout);
+
+    return false;
 }
 static Sys_var_ulong Sys_net_read_timeout(
-       "net_read_timeout",
-       "Number of seconds to wait for more data from a connection before "
-       "aborting the read",
-       SESSION_VAR(net_read_timeout), CMD_LINE(REQUIRED_ARG),
-       VALID_RANGE(1, LONG_TIMEOUT), DEFAULT(NET_READ_TIMEOUT), BLOCK_SIZE(1),
-       NO_MUTEX_GUARD, NOT_IN_BINLOG, ON_CHECK(0),
-       ON_UPDATE(fix_net_read_timeout));
+    "net_read_timeout",
+    "Number of seconds to wait for more data from a connection before "
+    "aborting the read",
+    SESSION_VAR(net_read_timeout), CMD_LINE(REQUIRED_ARG),
+    VALID_RANGE(1, LONG_TIMEOUT), DEFAULT(NET_READ_TIMEOUT), BLOCK_SIZE(1),
+    NO_MUTEX_GUARD, NOT_IN_BINLOG, ON_CHECK(0),
+    ON_UPDATE(fix_net_read_timeout));
 
 static bool fix_net_write_timeout(sys_var *self, THD *thd, enum_var_type type)
 {
-  if (type != OPT_GLOBAL)
-    my_net_set_write_timeout(&thd->net, thd->variables.net_write_timeout);
-  return false;
+    if (type != OPT_GLOBAL)
+        my_net_set_write_timeout(&thd->net, thd->variables.net_write_timeout);
+
+    return false;
 }
 static Sys_var_ulong Sys_net_write_timeout(
-       "net_write_timeout",
-       "Number of seconds to wait for a block to be written to a connection "
-       "before aborting the write",
-       SESSION_VAR(net_write_timeout), CMD_LINE(REQUIRED_ARG),
-       VALID_RANGE(1, LONG_TIMEOUT), DEFAULT(NET_WRITE_TIMEOUT), BLOCK_SIZE(1),
-       NO_MUTEX_GUARD, NOT_IN_BINLOG, ON_CHECK(0),
-       ON_UPDATE(fix_net_write_timeout));
+    "net_write_timeout",
+    "Number of seconds to wait for a block to be written to a connection "
+    "before aborting the write",
+    SESSION_VAR(net_write_timeout), CMD_LINE(REQUIRED_ARG),
+    VALID_RANGE(1, LONG_TIMEOUT), DEFAULT(NET_WRITE_TIMEOUT), BLOCK_SIZE(1),
+    NO_MUTEX_GUARD, NOT_IN_BINLOG, ON_CHECK(0),
+    ON_UPDATE(fix_net_write_timeout));
 
 // static bool fix_net_retry_count(sys_var *self, THD *thd, enum_var_type type)
 // {
@@ -229,68 +238,68 @@ static Sys_var_ulong Sys_net_write_timeout(
 //        DEFAULT(FALSE));
 
 static Sys_var_uint Sys_port(
-       "port",
-       "Port number to use for connection or 0 to default to, "
-       "my.cnf, $MYSQL_TCP_PORT, "
+    "port",
+    "Port number to use for connection or 0 to default to, "
+    "my.cnf, $MYSQL_TCP_PORT, "
 #if MYSQL_PORT_DEFAULT == 0
-       "/etc/services, "
+    "/etc/services, "
 #endif
-       "built-in default (" STRINGIFY_ARG(MYSQL_PORT) "), whatever comes first",
-       READ_ONLY GLOBAL_VAR(mysqld_port), CMD_LINE(REQUIRED_ARG, 'P'),
-       VALID_RANGE(0, UINT_MAX32), DEFAULT(0), BLOCK_SIZE(1));
+    "built-in default (" STRINGIFY_ARG(MYSQL_PORT) "), whatever comes first",
+    READ_ONLY GLOBAL_VAR(mysqld_port), CMD_LINE(REQUIRED_ARG, 'P'),
+    VALID_RANGE(0, UINT_MAX32), DEFAULT(0), BLOCK_SIZE(1));
 
 static bool fix_thd_mem_root(sys_var *self, THD *thd, enum_var_type type)
 {
-  if (type != OPT_GLOBAL)
-    reset_root_defaults(thd->mem_root,
-                        thd->variables.query_alloc_block_size,
-                        thd->variables.query_prealloc_size);
-  return false;
+    if (type != OPT_GLOBAL)
+        reset_root_defaults(thd->mem_root,
+                            thd->variables.query_alloc_block_size,
+                            thd->variables.query_prealloc_size);
+
+    return false;
 }
 static Sys_var_ulong Sys_query_alloc_block_size(
-       "query_alloc_block_size",
-       "Allocation block size for query parsing and execution",
-       SESSION_VAR(query_alloc_block_size), CMD_LINE(REQUIRED_ARG),
-       VALID_RANGE(1024, ULONG_MAX), DEFAULT(QUERY_ALLOC_BLOCK_SIZE),
-       BLOCK_SIZE(1024), NO_MUTEX_GUARD, NOT_IN_BINLOG, ON_CHECK(0),
-       ON_UPDATE(fix_thd_mem_root));
+    "query_alloc_block_size",
+    "Allocation block size for query parsing and execution",
+    SESSION_VAR(query_alloc_block_size), CMD_LINE(REQUIRED_ARG),
+    VALID_RANGE(1024, ULONG_MAX), DEFAULT(QUERY_ALLOC_BLOCK_SIZE),
+    BLOCK_SIZE(1024), NO_MUTEX_GUARD, NOT_IN_BINLOG, ON_CHECK(0),
+    ON_UPDATE(fix_thd_mem_root));
 
 static Sys_var_ulong Sys_query_prealloc_size(
-       "query_prealloc_size",
-       "Persistent buffer for query parsing and execution",
-       SESSION_VAR(query_prealloc_size), CMD_LINE(REQUIRED_ARG),
-       VALID_RANGE(QUERY_ALLOC_PREALLOC_SIZE, ULONG_MAX),
-       DEFAULT(QUERY_ALLOC_PREALLOC_SIZE),
-       BLOCK_SIZE(1024), NO_MUTEX_GUARD, NOT_IN_BINLOG, ON_CHECK(0),
-       ON_UPDATE(fix_thd_mem_root));
+    "query_prealloc_size",
+    "Persistent buffer for query parsing and execution",
+    SESSION_VAR(query_prealloc_size), CMD_LINE(REQUIRED_ARG),
+    VALID_RANGE(QUERY_ALLOC_PREALLOC_SIZE, ULONG_MAX),
+    DEFAULT(QUERY_ALLOC_PREALLOC_SIZE),
+    BLOCK_SIZE(1024), NO_MUTEX_GUARD, NOT_IN_BINLOG, ON_CHECK(0),
+    ON_UPDATE(fix_thd_mem_root));
 
 static Sys_var_charptr Sys_socket(
-       "socket", "Socket file to use for connection",
-       READ_ONLY GLOBAL_VAR(mysqld_unix_port), CMD_LINE(REQUIRED_ARG),
-       IN_FS_CHARSET, DEFAULT(0));
+    "socket", "Socket file to use for connection",
+    READ_ONLY GLOBAL_VAR(mysqld_unix_port), CMD_LINE(REQUIRED_ARG),
+    IN_FS_CHARSET, DEFAULT(0));
 
 static Sys_var_ulong Sys_thread_stack(
-       "thread_stack", "The stack size for each thread",
-       READ_ONLY GLOBAL_VAR(my_thread_stack_size), CMD_LINE(REQUIRED_ARG),
-       VALID_RANGE(128*1024, ULONG_MAX), DEFAULT(DEFAULT_THREAD_STACK),
-       BLOCK_SIZE(1024));
+    "thread_stack", "The stack size for each thread",
+    READ_ONLY GLOBAL_VAR(my_thread_stack_size), CMD_LINE(REQUIRED_ARG),
+    VALID_RANGE(128 * 1024, ULONG_MAX), DEFAULT(DEFAULT_THREAD_STACK),
+    BLOCK_SIZE(1024));
 
-static const char *thread_handling_names[]=
-{
-  "one-thread-per-connection", "no-threads", "loaded-dynamically",
-  0
+static const char *thread_handling_names[] = {
+    "one-thread-per-connection", "no-threads", "loaded-dynamically",
+    0
 };
 static Sys_var_enum Sys_thread_handling(
-       "thread_handling",
-       "Define threads usage for handling queries, one of "
-       "one-thread-per-connection, no-threads, loaded-dynamically"
-       , READ_ONLY GLOBAL_VAR(thread_handling), CMD_LINE(REQUIRED_ARG),
-       thread_handling_names, DEFAULT(0));
+    "thread_handling",
+    "Define threads usage for handling queries, one of "
+    "one-thread-per-connection, no-threads, loaded-dynamically"
+    , READ_ONLY GLOBAL_VAR(thread_handling), CMD_LINE(REQUIRED_ARG),
+    thread_handling_names, DEFAULT(0));
 
 #if defined(HAVE_OPENSSL) && !defined(EMBEDDED_LIBRARY)
-#define SSL_OPT(X) CMD_LINE(REQUIRED_ARG,X)
+    #define SSL_OPT(X) CMD_LINE(REQUIRED_ARG,X)
 #else
-#define SSL_OPT(X) NO_CMD_LINE
+    #define SSL_OPT(X) NO_CMD_LINE
 #endif
 
 static bool check_log_path(sys_var *self, THD *thd, set_var *var)
@@ -301,39 +310,38 @@ static bool check_log_path(sys_var *self, THD *thd, set_var *var)
     if (!var->save_result.string_value.str)
         return true;
 
-    if (var->save_result.string_value.length > FN_REFLEN)
-    { // path is too long
+    if (var->save_result.string_value.length > FN_REFLEN) {
+        // path is too long
         my_error(ER_PATH_LENGTH, MYF(0), self->name.str);
         return true;
     }
 
     char path[FN_REFLEN];
-    size_t path_length= unpack_filename(path, var->save_result.string_value.str);
+    size_t path_length = unpack_filename(path, var->save_result.string_value.str);
 
     if (!path_length)
         return true;
 
-    if (!is_filename_allowed(var->save_result.string_value.str, 
-        var->save_result.string_value.length, TRUE))
-    {
-        my_error(ER_WRONG_VALUE_FOR_VAR, MYF(0), 
-            self->name.str, var->save_result.string_value.str);
+    if (!is_filename_allowed(var->save_result.string_value.str,
+                             var->save_result.string_value.length, TRUE)) {
+        my_error(ER_WRONG_VALUE_FOR_VAR, MYF(0),
+                 self->name.str, var->save_result.string_value.str);
         return true;
     }
 
     MY_STAT f_stat;
 
-    if (my_stat(path, &f_stat, MYF(0)))
-    {
+    if (my_stat(path, &f_stat, MYF(0))) {
         if (!MY_S_ISREG(f_stat.st_mode) || !(f_stat.st_mode & MY_S_IWRITE))
             return true; // not a regular writable file
+
         return false;
     }
 
     (void) dirname_part(path, var->save_result.string_value.str, &path_length);
 
-    if (var->save_result.string_value.length - path_length >= FN_LEN)
-    { // filename is too long
+    if (var->save_result.string_value.length - path_length >= FN_LEN) {
+        // filename is too long
         my_error(ER_PATH_LENGTH, MYF(0), self->name.str);
         return true;
     }
@@ -341,31 +349,34 @@ static bool check_log_path(sys_var *self, THD *thd, set_var *var)
     if (!path_length) // no path is good path (remember, relative to datadir)
         return false;
 
-    if (my_access(path, (F_OK|W_OK)))
+    if (my_access(path, (F_OK | W_OK)))
         return true; // directory is not writable
 
     return false;
 }
-static bool fix_log(char** logname, const char* default_logname,
-    const char*ext, bool enabled, void (*reopen)(char*))
+static bool fix_log(char **logname, const char *default_logname,
+                    const char *ext, bool enabled, void (*reopen)(char *))
 {
-    if (!*logname) // SET ... = DEFAULT
-    {
+    if (!*logname) { // SET ... = DEFAULT
         char buff[FN_REFLEN];
-        *logname= my_strdup(make_log_name(buff, default_logname, ext),
-            MYF(MY_FAE+MY_WME));
+        *logname = my_strdup(make_log_name(buff, default_logname, ext),
+                             MYF(MY_FAE + MY_WME));
+
         if (!*logname)
             return true;
     }
+
     logger.lock_exclusive();
     mysql_mutex_unlock(&LOCK_global_system_variables);
+
     if (enabled)
         reopen(*logname);
+
     logger.unlock();
     mysql_mutex_lock(&LOCK_global_system_variables);
     return false;
 }
-static void reopen_general_log(char* name)
+static void reopen_general_log(char *name)
 {
     logger.get_log_file_handler()->close(0);
     logger.get_log_file_handler()->open_query_log(name);
@@ -373,7 +384,7 @@ static void reopen_general_log(char* name)
 static bool fix_general_log_file(sys_var *self, THD *thd, enum_var_type type)
 {
     return fix_log(&opt_logname, default_logfile_name, ".log", opt_log,
-        reopen_general_log);
+                   reopen_general_log);
 }
 static Sys_var_charptr Sys_general_log_path(
     "general_log_file", "Log connections and queries to given file",
@@ -402,59 +413,59 @@ static Sys_var_mybool Sys_general_log(
 
 static char *server_version_ptr;
 static Sys_var_charptr Sys_version(
-       "version", "Server version",
-       READ_ONLY GLOBAL_VAR(server_version_ptr), NO_CMD_LINE,
-       IN_SYSTEM_CHARSET, DEFAULT(server_version));
+    "version", "Server version",
+    READ_ONLY GLOBAL_VAR(server_version_ptr), NO_CMD_LINE,
+    IN_SYSTEM_CHARSET, DEFAULT(server_version));
 
 static char *server_version_comment_ptr;
 static Sys_var_charptr Sys_version_comment(
-       "version_comment", "version_comment",
-       READ_ONLY GLOBAL_VAR(server_version_comment_ptr), NO_CMD_LINE,
-       IN_SYSTEM_CHARSET, DEFAULT(MYSQL_COMPILATION_COMMENT));
+    "version_comment", "version_comment",
+    READ_ONLY GLOBAL_VAR(server_version_comment_ptr), NO_CMD_LINE,
+    IN_SYSTEM_CHARSET, DEFAULT(MYSQL_COMPILATION_COMMENT));
 
 static char *server_version_compile_machine_ptr;
 static Sys_var_charptr Sys_version_compile_machine(
-       "version_compile_machine", "version_compile_machine",
-       READ_ONLY GLOBAL_VAR(server_version_compile_machine_ptr), NO_CMD_LINE,
-       IN_SYSTEM_CHARSET, DEFAULT(MACHINE_TYPE));
+    "version_compile_machine", "version_compile_machine",
+    READ_ONLY GLOBAL_VAR(server_version_compile_machine_ptr), NO_CMD_LINE,
+    IN_SYSTEM_CHARSET, DEFAULT(MACHINE_TYPE));
 
 static char *server_version_compile_os_ptr;
 static Sys_var_charptr Sys_version_compile_os(
-       "version_compile_os", "version_compile_os",
-       READ_ONLY GLOBAL_VAR(server_version_compile_os_ptr), NO_CMD_LINE,
-       IN_SYSTEM_CHARSET, DEFAULT(SYSTEM_TYPE));
+    "version_compile_os", "version_compile_os",
+    READ_ONLY GLOBAL_VAR(server_version_compile_os_ptr), NO_CMD_LINE,
+    IN_SYSTEM_CHARSET, DEFAULT(SYSTEM_TYPE));
 
 static Sys_var_ulong Sys_net_wait_timeout(
-       "wait_timeout",
-       "The number of seconds the server waits for activity on a "
-       "connection before closing it",
-       SESSION_VAR(net_wait_timeout), CMD_LINE(REQUIRED_ARG),
-       VALID_RANGE(1, IF_WIN(INT_MAX32/1000, LONG_TIMEOUT)),
-       DEFAULT(NET_WAIT_TIMEOUT), BLOCK_SIZE(1));
+    "wait_timeout",
+    "The number of seconds the server waits for activity on a "
+    "connection before closing it",
+    SESSION_VAR(net_wait_timeout), CMD_LINE(REQUIRED_ARG),
+    VALID_RANGE(1, IF_WIN(INT_MAX32 / 1000, LONG_TIMEOUT)),
+    DEFAULT(NET_WAIT_TIMEOUT), BLOCK_SIZE(1));
 
 static Sys_var_charptr Sys_date_format(
-       "date_format", "The DATE format (ignored)",
-       READ_ONLY GLOBAL_VAR(global_date_format.format.str),
-       CMD_LINE(REQUIRED_ARG), IN_SYSTEM_CHARSET,
-       DEFAULT(known_date_time_formats[ISO_FORMAT].date_format),
-       NO_MUTEX_GUARD, NOT_IN_BINLOG, ON_CHECK(0), ON_UPDATE(0),
-       DEPRECATED(""));
+    "date_format", "The DATE format (ignored)",
+    READ_ONLY GLOBAL_VAR(global_date_format.format.str),
+    CMD_LINE(REQUIRED_ARG), IN_SYSTEM_CHARSET,
+    DEFAULT(known_date_time_formats[ISO_FORMAT].date_format),
+    NO_MUTEX_GUARD, NOT_IN_BINLOG, ON_CHECK(0), ON_UPDATE(0),
+    DEPRECATED(""));
 
 static Sys_var_charptr Sys_datetime_format(
-       "datetime_format", "The DATETIME format (ignored)",
-       READ_ONLY GLOBAL_VAR(global_datetime_format.format.str),
-       CMD_LINE(REQUIRED_ARG), IN_SYSTEM_CHARSET,
-       DEFAULT(known_date_time_formats[ISO_FORMAT].datetime_format),
-       NO_MUTEX_GUARD, NOT_IN_BINLOG, ON_CHECK(0), ON_UPDATE(0),
-       DEPRECATED(""));
+    "datetime_format", "The DATETIME format (ignored)",
+    READ_ONLY GLOBAL_VAR(global_datetime_format.format.str),
+    CMD_LINE(REQUIRED_ARG), IN_SYSTEM_CHARSET,
+    DEFAULT(known_date_time_formats[ISO_FORMAT].datetime_format),
+    NO_MUTEX_GUARD, NOT_IN_BINLOG, ON_CHECK(0), ON_UPDATE(0),
+    DEPRECATED(""));
 
 static Sys_var_charptr Sys_time_format(
-       "time_format", "The TIME format (ignored)",
-       READ_ONLY GLOBAL_VAR(global_time_format.format.str),
-       CMD_LINE(REQUIRED_ARG), IN_SYSTEM_CHARSET,
-       DEFAULT(known_date_time_formats[ISO_FORMAT].time_format),
-       NO_MUTEX_GUARD, NOT_IN_BINLOG, ON_CHECK(0), ON_UPDATE(0),
-       DEPRECATED(""));
+    "time_format", "The TIME format (ignored)",
+    READ_ONLY GLOBAL_VAR(global_time_format.format.str),
+    CMD_LINE(REQUIRED_ARG), IN_SYSTEM_CHARSET,
+    DEFAULT(known_date_time_formats[ISO_FORMAT].time_format),
+    NO_MUTEX_GUARD, NOT_IN_BINLOG, ON_CHECK(0), ON_UPDATE(0),
+    DEPRECATED(""));
 
 // static Sys_var_bit Sys_big_selects(
 //        "sql_big_selects", "sql_big_selects",
@@ -462,7 +473,7 @@ static Sys_var_charptr Sys_time_format(
 //        DEFAULT(FALSE));
 
 /**
-  This function sets the session variable thd->variables.sql_log_bin 
+  This function sets the session variable thd->variables.sql_log_bin
   to reflect changes to @@session.sql_log_bin.
 
   @param[IN] self   A pointer to the sys_var, i.e. Sys_log_binlog.
@@ -552,7 +563,7 @@ static Sys_var_charptr Sys_time_format(
 //        "timestamp", "Set the time for this client",
 //        sys_var::ONLY_SESSION, NO_CMD_LINE,
 //        VALID_RANGE(0, 0), BLOCK_SIZE(1),
-//        NO_MUTEX_GUARD, IN_BINLOG, ON_CHECK(check_timestamp), 
+//        NO_MUTEX_GUARD, IN_BINLOG, ON_CHECK(check_timestamp),
 //        ON_UPDATE(update_timestamp), ON_READ(read_timestamp));
 //
 // static ulonglong read_error_count(THD *thd)
@@ -610,7 +621,7 @@ static Sys_var_charptr Sys_inception_user(
     READ_ONLY GLOBAL_VAR(inception_user), CMD_LINE(REQUIRED_ARG),
     IN_FS_CHARSET, DEFAULT(""));
 
-static Sys_var_charptr Sys_inception_password(                       
+static Sys_var_charptr Sys_inception_password(
     "inception_password", "the user password of inception.",
     READ_ONLY GLOBAL_VAR(inception_password), CMD_LINE(REQUIRED_ARG),
     IN_FS_CHARSET, DEFAULT(""));
@@ -695,28 +706,29 @@ static Sys_var_mybool Sys_inception_enable_not_innodb(
 
 static bool check_charset(sys_var *self, THD *thd, set_var *var)
 {
-    char*   charset;
-    char*   strToken;
+    char   *charset;
+    char   *strToken;
     int     ret;
+
     if (!var->value)
-        return false; 
+        return false;
 
     if (var->save_result.string_value.length > 256)
         return true;
 
-    charset = (char*)my_malloc(var->save_result.string_value.length + 1, MY_ZEROFILL);
+    charset = (char *)my_malloc(var->save_result.string_value.length + 1, MY_ZEROFILL);
     strcpy(charset, var->save_result.string_value.str);
-    if ((strToken = strtok(charset, ",")) == NULL)
-    {
+
+    if ((strToken = strtok(charset, ",")) == NULL) {
         ret = false;
         goto err;
     }
 
-    while(strToken)
-    {
+    while(strToken) {
         if (get_charset_number(strToken, MY_CS_COMPILED) == 0)
             return true;
-        strToken=strtok(NULL, ",");
+
+        strToken = strtok(NULL, ",");
     }
 
 err:
@@ -850,13 +862,13 @@ static Sys_var_ulong Sys_inception_osc_min_table_size(
     "inception_osc_min_table_size",
     "when table is larger then this value, then use osc, size is measure by Mega",
     SESSION_VAR(inception_osc_min_table_size), CMD_LINE(REQUIRED_ARG),
-    VALID_RANGE(0, 1024*1024), DEFAULT(16), BLOCK_SIZE(1));
+    VALID_RANGE(0, 1024 * 1024), DEFAULT(16), BLOCK_SIZE(1));
 
 static Sys_var_charptr Sys_inception_osc_bin_dir(
-     "inception_osc_bin_dir", "home directory for pt-online-schema-change",
-     READ_ONLY GLOBAL_VAR(inception_osc_bin_dir), CMD_LINE(REQUIRED_ARG),
-     IN_FS_CHARSET, DEFAULT(""),
-     NO_MUTEX_GUARD, NOT_IN_BINLOG);
+    "inception_osc_bin_dir", "home directory for pt-online-schema-change",
+    READ_ONLY GLOBAL_VAR(inception_osc_bin_dir), CMD_LINE(REQUIRED_ARG),
+    IN_FS_CHARSET, DEFAULT(""),
+    NO_MUTEX_GUARD, NOT_IN_BINLOG);
 
 static Sys_var_ulong Sys_inception_osc_critical_connected(
     "inception_osc_critical_thread_connected",
@@ -867,7 +879,7 @@ static Sys_var_ulong Sys_inception_osc_critical_connected(
     "If not given, the tool determines a threshold by examining the "
     "current value at startup and doubling it",
     SESSION_VAR(inception_osc_critical_connected), CMD_LINE(REQUIRED_ARG),
-    VALID_RANGE(1, 1024*1024), DEFAULT(1000), BLOCK_SIZE(1));
+    VALID_RANGE(1, 1024 * 1024), DEFAULT(1000), BLOCK_SIZE(1));
 
 static Sys_var_ulong Sys_inception_osc_critical_running(
     "inception_osc_critical_thread_running",
@@ -878,7 +890,7 @@ static Sys_var_ulong Sys_inception_osc_critical_running(
     "If not given, the tool determines a threshold by examining the "
     "current value at startup and doubling it",
     SESSION_VAR(inception_osc_critical_running), CMD_LINE(REQUIRED_ARG),
-    VALID_RANGE(1, 1024*1024), DEFAULT(80), BLOCK_SIZE(1));
+    VALID_RANGE(1, 1024 * 1024), DEFAULT(80), BLOCK_SIZE(1));
 
 static Sys_var_ulong Sys_inception_osc_max_connected(
     "inception_osc_max_thread_connected",
@@ -888,7 +900,7 @@ static Sys_var_ulong Sys_inception_osc_max_connected(
     "(or :MAX_VALUE) can follow each variable. If not given, the tool "
     "determines a threshold by examining the current value and increasing it by 20%.",
     SESSION_VAR(inception_osc_max_connected), CMD_LINE(REQUIRED_ARG),
-    VALID_RANGE(1, 1024*1024), DEFAULT(1000), BLOCK_SIZE(1));
+    VALID_RANGE(1, 1024 * 1024), DEFAULT(1000), BLOCK_SIZE(1));
 
 static Sys_var_ulong Sys_inception_osc_max_running(
     "inception_osc_max_thread_running",
@@ -898,7 +910,7 @@ static Sys_var_ulong Sys_inception_osc_max_running(
     "(or :MAX_VALUE) can follow each variable. If not given, the tool "
     "determines a threshold by examining the current value and increasing it by 20%.",
     SESSION_VAR(inception_osc_max_running), CMD_LINE(REQUIRED_ARG),
-    VALID_RANGE(1, 1024*1024), DEFAULT(80), BLOCK_SIZE(1));
+    VALID_RANGE(1, 1024 * 1024), DEFAULT(80), BLOCK_SIZE(1));
 
 static Sys_var_double Sys_inception_osc_chunk_time(
     "inception_osc_chunk_time",
@@ -923,7 +935,7 @@ static Sys_var_double Sys_inception_osc_max_lag(
     "inception_osc_max_lag",
     "Pause the data copy until all replicas’ lag is less than this value..",
     SESSION_VAR(inception_osc_max_lag),
-    CMD_LINE(REQUIRED_ARG), VALID_RANGE(0, 1024*1024), DEFAULT(3),
+    CMD_LINE(REQUIRED_ARG), VALID_RANGE(0, 1024 * 1024), DEFAULT(3),
     NO_MUTEX_GUARD, NOT_IN_BINLOG, ON_CHECK(0));
 
 static Sys_var_ulong Sys_inception_osc_chunk_size(
@@ -935,7 +947,7 @@ static Sys_var_ulong Sys_inception_osc_chunk_size(
     "explicitly, however, then it disables the dynamic adjustment behavior and tries "
     "to make all chunks exactly the specified number of rows.",
     SESSION_VAR(inception_osc_chunk_size), CMD_LINE(REQUIRED_ARG),
-    VALID_RANGE(1, 1024*1024), DEFAULT(1000), BLOCK_SIZE(1));
+    VALID_RANGE(1, 1024 * 1024), DEFAULT(1000), BLOCK_SIZE(1));
 
 static Sys_var_double Sys_inception_osc_chunk_size_limit(
     "inception_osc_chunk_size_limit",
@@ -945,7 +957,7 @@ static Sys_var_double Sys_inception_osc_chunk_size_limit(
     "The tool uses <EXPLAIN> to estimate how many rows are in the chunk. If that estimate"
     "exceeds the desired chunk size times the limit, then the tool skips the chunk.",
     SESSION_VAR(inception_osc_chunk_size_limit),
-    CMD_LINE(REQUIRED_ARG), VALID_RANGE(0, 1024*1024), DEFAULT(4),
+    CMD_LINE(REQUIRED_ARG), VALID_RANGE(0, 1024 * 1024), DEFAULT(4),
     NO_MUTEX_GUARD, NOT_IN_BINLOG, ON_CHECK(0));
 
 static Sys_var_mybool Sys_inception_osc_drop_new_table(
@@ -1012,21 +1024,21 @@ static Sys_var_mybool Sys_inception_osc_check_alter(
     SESSION_VAR(inception_osc_check_alter),
     CMD_LINE(OPT_ARG), DEFAULT(TRUE));
 
-const char *osc_alter_foreign_keys_method[]= 
+const char *osc_alter_foreign_keys_method[] =
 {"auto", "none", "rebuild_constraints", "drop_swap", NullS};
 
 static Sys_var_enum Sys_inception_alter_foreign_keys_method(
     "inception_osc_alter_foreign_keys_method",
     "--alter-foreign-keys-method",
     SESSION_VAR(inception_alter_foreign_keys_method), CMD_LINE(REQUIRED_ARG),
-    osc_alter_foreign_keys_method, DEFAULT(alter_foreign_keys_method_none), 
+    osc_alter_foreign_keys_method, DEFAULT(alter_foreign_keys_method_none),
     NO_MUTEX_GUARD, NOT_IN_BINLOG);
 
-const char *osc_recursion_method[]= {"processlist", "hosts", "none", NullS};
+const char *osc_recursion_method[] = {"processlist", "hosts", "none", NullS};
 static Sys_var_enum Sys_inception_osc_recursion_method(
     "inception_osc_recursion_method",
     "Preferred recursion method used to find slaves.",
     SESSION_VAR(inception_osc_recursion_method), CMD_LINE(REQUIRED_ARG),
-    osc_recursion_method, DEFAULT(recursion_method_processlist), 
+    osc_recursion_method, DEFAULT(recursion_method_processlist),
     NO_MUTEX_GUARD, NOT_IN_BINLOG);
 

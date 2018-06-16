@@ -25,7 +25,7 @@
 typedef struct st_ha_create_information HA_CREATE_INFO;
 
 #ifndef NO_ALARM_LOOP
-#define NO_ALARM_LOOP		/* lib5 and popen can't use alarm */
+    #define NO_ALARM_LOOP		/* lib5 and popen can't use alarm */
 #endif
 
 /* These paths are converted to other systems (WIN95) before use */
@@ -36,13 +36,13 @@ typedef struct st_ha_create_information HA_CREATE_INFO;
 #define LOG_PREFIX	"ML"
 #define PROGDIR		"bin/"
 #ifndef MYSQL_DATADIR
-#define MYSQL_DATADIR		"data/"
+    #define MYSQL_DATADIR		"data/"
 #endif
 #ifndef SHAREDIR
-#define SHAREDIR	"share/"
+    #define SHAREDIR	"share/"
 #endif
 #ifndef PLUGINDIR
-#define PLUGINDIR	"lib/plugin"
+    #define PLUGINDIR	"lib/plugin"
 #endif
 
 extern const char **server_errmsgs;
@@ -75,16 +75,16 @@ extern const char **server_errmsgs;
 /* 2048 is no longer used */
 #define SPECIAL_LOG_QUERIES_NOT_USING_INDEXES 4096 /* Obsolete */
 
-	/* Extern defines */
+/* Extern defines */
 #define store_record(A,B) memcpy((A)->B,(A)->record[0],(size_t) (A)->s->reclength)
 #define restore_record(A,B) memcpy((A)->record[0],(A)->B,(size_t) (A)->s->reclength)
 #define cmp_record(A,B) memcmp((A)->record[0],(A)->B,(size_t) (A)->s->reclength)
 #define empty_record(A) { \
-                          restore_record((A),s->default_values); \
-                          memset((A)->null_flags, 255, (A)->s->null_bytes);\
-                        }
+        restore_record((A),s->default_values); \
+        memset((A)->null_flags, 255, (A)->s->null_bytes);\
+    }
 
-	/* Defines for use with openfrm, openprt and openfrd */
+/* Defines for use with openfrm, openprt and openfrd */
 
 #define READ_ALL		1	/* openfrm: Read all parameters */
 #define CHANGE_FRM		2	/* openfrm: open .frm as O_RDWR */
@@ -155,13 +155,13 @@ extern const char **server_errmsgs;
 */
 #define MIN_TURBOBM_PATTERN_LEN 3
 
-/* 
+/*
    Defines for binary logging.
    Do not decrease the value of BIN_LOG_HEADER_SIZE.
    Do not even increase it before checking code.
 */
 
-#define BIN_LOG_HEADER_SIZE    4 
+#define BIN_LOG_HEADER_SIZE    4
 
 #define DEFAULT_KEY_CACHE_NAME "default"
 
@@ -174,14 +174,14 @@ extern const char **server_errmsgs;
 
 bool mysql_create_frm(THD *thd, const char *file_name,
                       const char *db, const char *table,
-		      HA_CREATE_INFO *create_info,
-		      List<Create_field> &create_field,
-		      uint key_count,KEY *key_info,handler *db_type);
+                      HA_CREATE_INFO *create_info,
+                      List<Create_field> &create_field,
+                      uint key_count, KEY *key_info, handler *db_type);
 int rea_create_table(THD *thd, const char *path,
                      const char *db, const char *table_name,
                      HA_CREATE_INFO *create_info,
-  		     List<Create_field> &create_field,
-                     uint key_count,KEY *key_info,
+                     List<Create_field> &create_field,
+                     uint key_count, KEY *key_info,
                      handler *file,
                      bool no_ha_table);
 #endif

@@ -244,7 +244,7 @@ static BOOLEAN init_done= FALSE; /* Set to TRUE when initialization done */
 */
 static struct settings init_settings;
 static const char *db_process= 0;/* Pointer to process name; argv[0] */
-my_bool _dbug_on_= FALSE;	 /* FALSE if no debugging at all */
+my_bool _dbug_on_= 1;	 /* FALSE if no debugging at all */
 
 typedef struct _db_code_state_ {
   const char *process;          /* Pointer to process name; usually argv[0] */
@@ -1415,7 +1415,7 @@ void _db_doprnt_(const char *format,...)
 
 /*
  * This function is intended as a
- * vfprintf clone with consistent, platform independent output for 
+ * vfprintf clone with consistent, platform independent output for
  * problematic formats like %p, %zd and %lld.
  */
 static void DbugVfprintf(FILE *stream, const char* format, va_list args)

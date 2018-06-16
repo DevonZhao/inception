@@ -40,11 +40,11 @@ bool thd_prepare_connection(THD *thd);
 bool thd_is_connection_alive(THD *thd);
 
 int check_user(THD *thd, enum enum_server_command command,
-	       const char *passwd, uint passwd_len, const char *db,
-	       bool check_count);
+               const char *passwd, uint passwd_len, const char *db,
+               bool check_count);
 
 bool login_connection(THD *thd);
-void prepare_new_connection_state(THD* thd);
+void prepare_new_connection_state(THD *thd);
 void end_connection(THD *thd);
 int get_or_create_user_conn(THD *thd, const char *user,
                             const char *host, const USER_RESOURCES *mqh);

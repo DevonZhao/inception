@@ -16,9 +16,9 @@ typedef void (*THREAD_FC)(void *);
 
 class NTService
 {
-  public:
+public:
     NTService();
-   ~NTService();
+    ~NTService();
 
     BOOL    bOsNT;	      ///< true if OS is NT, false for Win95
     //install optinos
@@ -46,26 +46,32 @@ class NTService
     DWORD   dwState;
 
     BOOL GetOS();	      // returns TRUE if WinNT
-    BOOL IsNT() { return bOsNT;}
+    BOOL IsNT()
+    {
+        return bOsNT;
+    }
     //init service entry point
-    long Init(LPCSTR szInternName,void *ServiceThread);
+    long Init(LPCSTR szInternName, void *ServiceThread);
 
     //application shutdown event
-    void SetShutdownEvent(HANDLE hEvent){ hShutdownEvent=hEvent; }
+    void SetShutdownEvent(HANDLE hEvent)
+    {
+        hShutdownEvent = hEvent;
+    }
 
 
     //service install / un-install
-    BOOL Install(int startType,LPCSTR szInternName,LPCSTR szDisplayName,
-                 LPCSTR szFullPath, LPCSTR szAccountName=NULL,
-                 LPCSTR szPassword=NULL);
+    BOOL Install(int startType, LPCSTR szInternName, LPCSTR szDisplayName,
+                 LPCSTR szFullPath, LPCSTR szAccountName = NULL,
+                 LPCSTR szPassword = NULL);
     BOOL SeekStatus(LPCSTR szInternName, int OperationType);
     BOOL Remove(LPCSTR szInternName);
     BOOL IsService(LPCSTR ServiceName);
     BOOL got_service_option(char **argv, char *service_option);
     BOOL is_super_user();
 
-    /* 
-      SetRunning() is to be called by the application 
+    /*
+      SetRunning() is to be called by the application
       when initialization completes and it can accept
       stop request
     */
@@ -82,12 +88,12 @@ class NTService
     void SetSlowStarting(unsigned long timeout);
 
     /*
-      Stop() is to be called by the application to stop 
+      Stop() is to be called by the application to stop
       the service
     */
-    void Stop(void); 
+    void Stop(void);
 
-  protected:
+protected:
     LPSTR		   ServiceName;
     HANDLE		   hExitEvent;
     SERVICE_STATUS_HANDLE  hServiceStatusHandle;
@@ -105,9 +111,9 @@ class NTService
     static void ServiceCtrlHandler (DWORD ctrlCode);
 
     void Exit(DWORD error);
-    BOOL SetStatus (DWORD dwCurrentState,DWORD dwWin32ExitCode,
-		    DWORD dwServiceSpecificExitCode,
-		    DWORD dwCheckPoint,DWORD dwWaitHint);
+    BOOL SetStatus (DWORD dwCurrentState, DWORD dwWin32ExitCode,
+                    DWORD dwServiceSpecificExitCode,
+                    DWORD dwCheckPoint, DWORD dwWaitHint);
 
 };
 /* ------------------------- the end -------------------------------------- */

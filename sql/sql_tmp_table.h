@@ -38,10 +38,10 @@ typedef struct st_order ORDER;
 typedef struct st_columndef MI_COLUMNDEF;
 
 TABLE *
-create_tmp_table(THD *thd,TMP_TABLE_PARAM *param,List<Item> &fields,
-		 ORDER *group, bool distinct, bool save_sum_fields,
-		 ulonglong select_options, ha_rows rows_limit,
-		 const char *table_alias);
+create_tmp_table(THD *thd, TMP_TABLE_PARAM *param, List<Item> &fields,
+                 ORDER *group, bool distinct, bool save_sum_fields,
+                 ulonglong select_options, ha_rows rows_limit,
+                 const char *table_alias);
 /**
   General routine to change field->ptr of a NULL-terminated array of Field
   objects. Useful when needed to call val_int, val_str or similar and the
@@ -53,25 +53,25 @@ create_tmp_table(THD *thd,TMP_TABLE_PARAM *param,List<Item> &fields,
 TABLE *create_virtual_tmp_table(THD *thd, List<Create_field> &field_list,  MEM_ROOT *mem_root);
 bool create_myisam_from_heap(THD *thd, TABLE *table,
                              MI_COLUMNDEF *start_recinfo,
-                             MI_COLUMNDEF **recinfo, 
-			     int error, bool ignore_last_dup,
+                             MI_COLUMNDEF **recinfo,
+                             int error, bool ignore_last_dup,
                              bool *is_duplicate);
 void free_tmp_table(THD *thd, TABLE *entry);
-TABLE *create_duplicate_weedout_tmp_table(THD *thd, 
-                                          uint uniq_tuple_length_arg,
-                                          SJ_TMP_TABLE *sjtbl);
+TABLE *create_duplicate_weedout_tmp_table(THD *thd,
+        uint uniq_tuple_length_arg,
+        SJ_TMP_TABLE *sjtbl);
 bool instantiate_tmp_table(TABLE *table, KEY *keyinfo,
                            MI_COLUMNDEF *start_recinfo,
                            MI_COLUMNDEF **recinfo,
                            ulonglong options, my_bool big_tables,
                            Opt_trace_context *trace);
-Field *create_tmp_field(THD *thd, TABLE *table,Item *item, Item::Type type,
+Field *create_tmp_field(THD *thd, TABLE *table, Item *item, Item::Type type,
                         Item ***copy_func, Field **from_field,
                         Field **default_field,
                         bool group, bool modify_item,
                         bool table_cant_handle_bit_fields,
                         bool make_copy_field);
-Field* create_tmp_field_from_field(THD *thd, Field* org_field,
+Field *create_tmp_field_from_field(THD *thd, Field *org_field,
                                    const char *name, TABLE *table,
                                    Item_field *item);
 

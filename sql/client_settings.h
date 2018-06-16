@@ -1,23 +1,23 @@
 /* Copyright (c) 2003, 2011, Oracle and/or its affiliates. All rights reserved.
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; version 2 of the License.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
-   
+
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software Foundation,
    51 Franklin Street, Suite 500, Boston, MA 02110-1335 USA */
 
 
 #ifndef CLIENT_SETTINGS_INCLUDED
-#define CLIENT_SETTINGS_INCLUDED
+    #define CLIENT_SETTINGS_INCLUDED
 #else
-#error You have already included an client_settings.h and it should not be included twice
+    #error You have already included an client_settings.h and it should not be included twice
 #endif /* CLIENT_SETTINGS_INCLUDED */
 
 #include <thr_alarm.h>
@@ -46,10 +46,10 @@
 #define mysql_server_end()       mysql_client_plugin_deinit()
 
 #ifdef HAVE_REPLICATION
-C_MODE_START
-void slave_io_thread_detach_vio();
-C_MODE_END
+    C_MODE_START
+    void slave_io_thread_detach_vio();
+    C_MODE_END
 #else
-#define slave_io_thread_detach_vio()
+    #define slave_io_thread_detach_vio()
 #endif
 

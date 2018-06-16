@@ -59,49 +59,49 @@
 */
 #define NO_ACCESS	(1L << 30)
 #define DB_ACLS \
-(UPDATE_ACL | SELECT_ACL | INSERT_ACL | DELETE_ACL | CREATE_ACL | DROP_ACL | \
- GRANT_ACL | REFERENCES_ACL | INDEX_ACL | ALTER_ACL | CREATE_TMP_ACL | \
- LOCK_TABLES_ACL | EXECUTE_ACL | CREATE_VIEW_ACL | SHOW_VIEW_ACL | \
- CREATE_PROC_ACL | ALTER_PROC_ACL | EVENT_ACL | TRIGGER_ACL)
+    (UPDATE_ACL | SELECT_ACL | INSERT_ACL | DELETE_ACL | CREATE_ACL | DROP_ACL | \
+     GRANT_ACL | REFERENCES_ACL | INDEX_ACL | ALTER_ACL | CREATE_TMP_ACL | \
+     LOCK_TABLES_ACL | EXECUTE_ACL | CREATE_VIEW_ACL | SHOW_VIEW_ACL | \
+     CREATE_PROC_ACL | ALTER_PROC_ACL | EVENT_ACL | TRIGGER_ACL)
 
 #define TABLE_ACLS \
-(SELECT_ACL | INSERT_ACL | UPDATE_ACL | DELETE_ACL | CREATE_ACL | DROP_ACL | \
- GRANT_ACL | REFERENCES_ACL | INDEX_ACL | ALTER_ACL | CREATE_VIEW_ACL | \
- SHOW_VIEW_ACL | TRIGGER_ACL)
+    (SELECT_ACL | INSERT_ACL | UPDATE_ACL | DELETE_ACL | CREATE_ACL | DROP_ACL | \
+     GRANT_ACL | REFERENCES_ACL | INDEX_ACL | ALTER_ACL | CREATE_VIEW_ACL | \
+     SHOW_VIEW_ACL | TRIGGER_ACL)
 
 #define COL_ACLS \
-(SELECT_ACL | INSERT_ACL | UPDATE_ACL | REFERENCES_ACL)
+    (SELECT_ACL | INSERT_ACL | UPDATE_ACL | REFERENCES_ACL)
 
 #define PROC_ACLS \
-(ALTER_PROC_ACL | EXECUTE_ACL | GRANT_ACL)
+    (ALTER_PROC_ACL | EXECUTE_ACL | GRANT_ACL)
 
 #define SHOW_PROC_ACLS \
-(ALTER_PROC_ACL | EXECUTE_ACL | CREATE_PROC_ACL)
+    (ALTER_PROC_ACL | EXECUTE_ACL | CREATE_PROC_ACL)
 
 #define GLOBAL_ACLS \
-(SELECT_ACL | INSERT_ACL | UPDATE_ACL | DELETE_ACL | CREATE_ACL | DROP_ACL | \
- RELOAD_ACL | SHUTDOWN_ACL | PROCESS_ACL | FILE_ACL | GRANT_ACL | \
- REFERENCES_ACL | INDEX_ACL | ALTER_ACL | SHOW_DB_ACL | SUPER_ACL | \
- CREATE_TMP_ACL | LOCK_TABLES_ACL | REPL_SLAVE_ACL | REPL_CLIENT_ACL | \
- EXECUTE_ACL | CREATE_VIEW_ACL | SHOW_VIEW_ACL | CREATE_PROC_ACL | \
- ALTER_PROC_ACL | CREATE_USER_ACL | EVENT_ACL | TRIGGER_ACL | \
- CREATE_TABLESPACE_ACL)
+    (SELECT_ACL | INSERT_ACL | UPDATE_ACL | DELETE_ACL | CREATE_ACL | DROP_ACL | \
+     RELOAD_ACL | SHUTDOWN_ACL | PROCESS_ACL | FILE_ACL | GRANT_ACL | \
+     REFERENCES_ACL | INDEX_ACL | ALTER_ACL | SHOW_DB_ACL | SUPER_ACL | \
+     CREATE_TMP_ACL | LOCK_TABLES_ACL | REPL_SLAVE_ACL | REPL_CLIENT_ACL | \
+     EXECUTE_ACL | CREATE_VIEW_ACL | SHOW_VIEW_ACL | CREATE_PROC_ACL | \
+     ALTER_PROC_ACL | CREATE_USER_ACL | EVENT_ACL | TRIGGER_ACL | \
+     CREATE_TABLESPACE_ACL)
 
 #define DEFAULT_CREATE_PROC_ACLS \
-(ALTER_PROC_ACL | EXECUTE_ACL)
+    (ALTER_PROC_ACL | EXECUTE_ACL)
 
 #define SHOW_CREATE_TABLE_ACLS \
-(SELECT_ACL | INSERT_ACL | UPDATE_ACL | DELETE_ACL | \
- CREATE_ACL | DROP_ACL | ALTER_ACL | INDEX_ACL | \
- TRIGGER_ACL | REFERENCES_ACL | GRANT_ACL | CREATE_VIEW_ACL | SHOW_VIEW_ACL)
+    (SELECT_ACL | INSERT_ACL | UPDATE_ACL | DELETE_ACL | \
+     CREATE_ACL | DROP_ACL | ALTER_ACL | INDEX_ACL | \
+     TRIGGER_ACL | REFERENCES_ACL | GRANT_ACL | CREATE_VIEW_ACL | SHOW_VIEW_ACL)
 
 /**
   Table-level privileges which are automatically "granted" to everyone on
   existing temporary tables (CREATE_ACL is necessary for ALTER ... RENAME).
 */
 #define TMP_TABLE_ACLS \
-(SELECT_ACL | INSERT_ACL | UPDATE_ACL | DELETE_ACL | CREATE_ACL | DROP_ACL | \
- INDEX_ACL | ALTER_ACL)
+    (SELECT_ACL | INSERT_ACL | UPDATE_ACL | DELETE_ACL | CREATE_ACL | DROP_ACL | \
+     INDEX_ACL | ALTER_ACL)
 
 /*
   Defines to change the above bits to how things are stored in tables
@@ -114,116 +114,116 @@
 #define DB_CHUNK1 (GRANT_ACL | REFERENCES_ACL | INDEX_ACL | ALTER_ACL)
 #define DB_CHUNK2 (CREATE_TMP_ACL | LOCK_TABLES_ACL)
 #define DB_CHUNK3 (CREATE_VIEW_ACL | SHOW_VIEW_ACL | \
-		   CREATE_PROC_ACL | ALTER_PROC_ACL )
+                   CREATE_PROC_ACL | ALTER_PROC_ACL )
 #define DB_CHUNK4 (EXECUTE_ACL)
 #define DB_CHUNK5 (EVENT_ACL | TRIGGER_ACL)
 
 #define fix_rights_for_db(A)  (((A)       & DB_CHUNK0) | \
-			      (((A) << 4) & DB_CHUNK1) | \
-			      (((A) << 6) & DB_CHUNK2) | \
-			      (((A) << 9) & DB_CHUNK3) | \
-			      (((A) << 2) & DB_CHUNK4))| \
-                              (((A) << 9) & DB_CHUNK5)
+                               (((A) << 4) & DB_CHUNK1) | \
+                               (((A) << 6) & DB_CHUNK2) | \
+                               (((A) << 9) & DB_CHUNK3) | \
+                               (((A) << 2) & DB_CHUNK4))| \
+(((A) << 9) & DB_CHUNK5)
 #define get_rights_for_db(A)  (((A) & DB_CHUNK0)       | \
-			      (((A) & DB_CHUNK1) >> 4) | \
-			      (((A) & DB_CHUNK2) >> 6) | \
-			      (((A) & DB_CHUNK3) >> 9) | \
-			      (((A) & DB_CHUNK4) >> 2))| \
-                              (((A) & DB_CHUNK5) >> 9)
+                               (((A) & DB_CHUNK1) >> 4) | \
+                               (((A) & DB_CHUNK2) >> 6) | \
+                               (((A) & DB_CHUNK3) >> 9) | \
+                               (((A) & DB_CHUNK4) >> 2))| \
+(((A) & DB_CHUNK5) >> 9)
 #define TBL_CHUNK0 DB_CHUNK0
 #define TBL_CHUNK1 DB_CHUNK1
 #define TBL_CHUNK2 (CREATE_VIEW_ACL | SHOW_VIEW_ACL)
 #define TBL_CHUNK3 TRIGGER_ACL
 #define fix_rights_for_table(A) (((A)        & TBL_CHUNK0) | \
-                                (((A) <<  4) & TBL_CHUNK1) | \
-                                (((A) << 11) & TBL_CHUNK2) | \
-                                (((A) << 15) & TBL_CHUNK3))
+                                 (((A) <<  4) & TBL_CHUNK1) | \
+                                 (((A) << 11) & TBL_CHUNK2) | \
+                                 (((A) << 15) & TBL_CHUNK3))
 #define get_rights_for_table(A) (((A) & TBL_CHUNK0)        | \
-                                (((A) & TBL_CHUNK1) >>  4) | \
-                                (((A) & TBL_CHUNK2) >> 11) | \
-                                (((A) & TBL_CHUNK3) >> 15))
+                                 (((A) & TBL_CHUNK1) >>  4) | \
+                                 (((A) & TBL_CHUNK2) >> 11) | \
+                                 (((A) & TBL_CHUNK3) >> 15))
 #define fix_rights_for_column(A) (((A) & 7) | (((A) & ~7) << 8))
 #define get_rights_for_column(A) (((A) & 7) | ((A) >> 8))
 #define fix_rights_for_procedure(A) ((((A) << 18) & EXECUTE_ACL) | \
-				     (((A) << 23) & ALTER_PROC_ACL) | \
-				     (((A) << 8) & GRANT_ACL))
+                                     (((A) << 23) & ALTER_PROC_ACL) | \
+                                     (((A) << 8) & GRANT_ACL))
 #define get_rights_for_procedure(A) ((((A) & EXECUTE_ACL) >> 18) |  \
-				     (((A) & ALTER_PROC_ACL) >> 23) | \
-				     (((A) & GRANT_ACL) >> 8))
+                                     (((A) & ALTER_PROC_ACL) >> 23) | \
+                                     (((A) & GRANT_ACL) >> 8))
 
 enum mysql_db_table_field
 {
-  MYSQL_DB_FIELD_HOST = 0,
-  MYSQL_DB_FIELD_DB,
-  MYSQL_DB_FIELD_USER,
-  MYSQL_DB_FIELD_SELECT_PRIV,
-  MYSQL_DB_FIELD_INSERT_PRIV,
-  MYSQL_DB_FIELD_UPDATE_PRIV,
-  MYSQL_DB_FIELD_DELETE_PRIV,
-  MYSQL_DB_FIELD_CREATE_PRIV,
-  MYSQL_DB_FIELD_DROP_PRIV,
-  MYSQL_DB_FIELD_GRANT_PRIV,
-  MYSQL_DB_FIELD_REFERENCES_PRIV,
-  MYSQL_DB_FIELD_INDEX_PRIV,
-  MYSQL_DB_FIELD_ALTER_PRIV,
-  MYSQL_DB_FIELD_CREATE_TMP_TABLE_PRIV,
-  MYSQL_DB_FIELD_LOCK_TABLES_PRIV,
-  MYSQL_DB_FIELD_CREATE_VIEW_PRIV,
-  MYSQL_DB_FIELD_SHOW_VIEW_PRIV,
-  MYSQL_DB_FIELD_CREATE_ROUTINE_PRIV,
-  MYSQL_DB_FIELD_ALTER_ROUTINE_PRIV,
-  MYSQL_DB_FIELD_EXECUTE_PRIV,
-  MYSQL_DB_FIELD_EVENT_PRIV,
-  MYSQL_DB_FIELD_TRIGGER_PRIV,
-  MYSQL_DB_FIELD_COUNT
+    MYSQL_DB_FIELD_HOST = 0,
+    MYSQL_DB_FIELD_DB,
+    MYSQL_DB_FIELD_USER,
+    MYSQL_DB_FIELD_SELECT_PRIV,
+    MYSQL_DB_FIELD_INSERT_PRIV,
+    MYSQL_DB_FIELD_UPDATE_PRIV,
+    MYSQL_DB_FIELD_DELETE_PRIV,
+    MYSQL_DB_FIELD_CREATE_PRIV,
+    MYSQL_DB_FIELD_DROP_PRIV,
+    MYSQL_DB_FIELD_GRANT_PRIV,
+    MYSQL_DB_FIELD_REFERENCES_PRIV,
+    MYSQL_DB_FIELD_INDEX_PRIV,
+    MYSQL_DB_FIELD_ALTER_PRIV,
+    MYSQL_DB_FIELD_CREATE_TMP_TABLE_PRIV,
+    MYSQL_DB_FIELD_LOCK_TABLES_PRIV,
+    MYSQL_DB_FIELD_CREATE_VIEW_PRIV,
+    MYSQL_DB_FIELD_SHOW_VIEW_PRIV,
+    MYSQL_DB_FIELD_CREATE_ROUTINE_PRIV,
+    MYSQL_DB_FIELD_ALTER_ROUTINE_PRIV,
+    MYSQL_DB_FIELD_EXECUTE_PRIV,
+    MYSQL_DB_FIELD_EVENT_PRIV,
+    MYSQL_DB_FIELD_TRIGGER_PRIV,
+    MYSQL_DB_FIELD_COUNT
 };
 
 enum mysql_user_table_field
 {
-  MYSQL_USER_FIELD_HOST= 0,
-  MYSQL_USER_FIELD_USER,
-  MYSQL_USER_FIELD_PASSWORD,
-  MYSQL_USER_FIELD_SELECT_PRIV,
-  MYSQL_USER_FIELD_INSERT_PRIV,
-  MYSQL_USER_FIELD_UPDATE_PRIV,
-  MYSQL_USER_FIELD_DELETE_PRIV,
-  MYSQL_USER_FIELD_CREATE_PRIV,
-  MYSQL_USER_FIELD_DROP_PRIV,
-  MYSQL_USER_FIELD_RELOAD_PRIV,
-  MYSQL_USER_FIELD_SHUTDOWN_PRIV,
-  MYSQL_USER_FIELD_PROCESS_PRIV,
-  MYSQL_USER_FIELD_FILE_PRIV,
-  MYSQL_USER_FIELD_GRANT_PRIV,
-  MYSQL_USER_FIELD_REFERENCES_PRIV,
-  MYSQL_USER_FIELD_INDEX_PRIV,
-  MYSQL_USER_FIELD_ALTER_PRIV,
-  MYSQL_USER_FIELD_SHOW_DB_PRIV,
-  MYSQL_USER_FIELD_SUPER_PRIV,
-  MYSQL_USER_FIELD_CREATE_TMP_TABLE_PRIV,
-  MYSQL_USER_FIELD_LOCK_TABLES_PRIV,
-  MYSQL_USER_FIELD_EXECUTE_PRIV,
-  MYSQL_USER_FIELD_REPL_SLAVE_PRIV,
-  MYSQL_USER_FIELD_REPL_CLIENT_PRIV,
-  MYSQL_USER_FIELD_CREATE_VIEW_PRIV,
-  MYSQL_USER_FIELD_SHOW_VIEW_PRIV,
-  MYSQL_USER_FIELD_CREATE_ROUTINE_PRIV,
-  MYSQL_USER_FIELD_ALTER_ROUTINE_PRIV,
-  MYSQL_USER_FIELD_CREATE_USER_PRIV,
-  MYSQL_USER_FIELD_EVENT_PRIV,
-  MYSQL_USER_FIELD_TRIGGER_PRIV,
-  MYSQL_USER_FIELD_CREATE_TABLESPACE_PRIV,
-  MYSQL_USER_FIELD_SSL_TYPE,
-  MYSQL_USER_FIELD_SSL_CIPHER,
-  MYSQL_USER_FIELD_X509_ISSUER,
-  MYSQL_USER_FIELD_X509_SUBJECT,
-  MYSQL_USER_FIELD_MAX_QUESTIONS,
-  MYSQL_USER_FIELD_MAX_UPDATES,
-  MYSQL_USER_FIELD_MAX_CONNECTIONS,
-  MYSQL_USER_FIELD_MAX_USER_CONNECTIONS,
-  MYSQL_USER_FIELD_PLUGIN,
-  MYSQL_USER_FIELD_AUTHENTICATION_STRING,
-  MYSQL_USER_FIELD_PASSWORD_EXPIRED,
-  MYSQL_USER_FIELD_COUNT
+    MYSQL_USER_FIELD_HOST = 0,
+    MYSQL_USER_FIELD_USER,
+    MYSQL_USER_FIELD_PASSWORD,
+    MYSQL_USER_FIELD_SELECT_PRIV,
+    MYSQL_USER_FIELD_INSERT_PRIV,
+    MYSQL_USER_FIELD_UPDATE_PRIV,
+    MYSQL_USER_FIELD_DELETE_PRIV,
+    MYSQL_USER_FIELD_CREATE_PRIV,
+    MYSQL_USER_FIELD_DROP_PRIV,
+    MYSQL_USER_FIELD_RELOAD_PRIV,
+    MYSQL_USER_FIELD_SHUTDOWN_PRIV,
+    MYSQL_USER_FIELD_PROCESS_PRIV,
+    MYSQL_USER_FIELD_FILE_PRIV,
+    MYSQL_USER_FIELD_GRANT_PRIV,
+    MYSQL_USER_FIELD_REFERENCES_PRIV,
+    MYSQL_USER_FIELD_INDEX_PRIV,
+    MYSQL_USER_FIELD_ALTER_PRIV,
+    MYSQL_USER_FIELD_SHOW_DB_PRIV,
+    MYSQL_USER_FIELD_SUPER_PRIV,
+    MYSQL_USER_FIELD_CREATE_TMP_TABLE_PRIV,
+    MYSQL_USER_FIELD_LOCK_TABLES_PRIV,
+    MYSQL_USER_FIELD_EXECUTE_PRIV,
+    MYSQL_USER_FIELD_REPL_SLAVE_PRIV,
+    MYSQL_USER_FIELD_REPL_CLIENT_PRIV,
+    MYSQL_USER_FIELD_CREATE_VIEW_PRIV,
+    MYSQL_USER_FIELD_SHOW_VIEW_PRIV,
+    MYSQL_USER_FIELD_CREATE_ROUTINE_PRIV,
+    MYSQL_USER_FIELD_ALTER_ROUTINE_PRIV,
+    MYSQL_USER_FIELD_CREATE_USER_PRIV,
+    MYSQL_USER_FIELD_EVENT_PRIV,
+    MYSQL_USER_FIELD_TRIGGER_PRIV,
+    MYSQL_USER_FIELD_CREATE_TABLESPACE_PRIV,
+    MYSQL_USER_FIELD_SSL_TYPE,
+    MYSQL_USER_FIELD_SSL_CIPHER,
+    MYSQL_USER_FIELD_X509_ISSUER,
+    MYSQL_USER_FIELD_X509_SUBJECT,
+    MYSQL_USER_FIELD_MAX_QUESTIONS,
+    MYSQL_USER_FIELD_MAX_UPDATES,
+    MYSQL_USER_FIELD_MAX_CONNECTIONS,
+    MYSQL_USER_FIELD_MAX_USER_CONNECTIONS,
+    MYSQL_USER_FIELD_PLUGIN,
+    MYSQL_USER_FIELD_AUTHENTICATION_STRING,
+    MYSQL_USER_FIELD_PASSWORD_EXPIRED,
+    MYSQL_USER_FIELD_COUNT
 };
 
 extern const TABLE_FIELD_DEF mysql_db_table_def;
@@ -240,40 +240,40 @@ void append_user(THD *thd, String *str, LEX_USER *user, bool comma,
                  bool passwd);
 my_bool  acl_init(bool dont_read_acl_tables);
 my_bool acl_reload(THD *thd);
-void acl_free(bool end=0);
+void acl_free(bool end = 0);
 ulong acl_get(const char *host, const char *ip,
-	      const char *user, const char *db, my_bool db_is_pattern);
+              const char *user, const char *db, my_bool db_is_pattern);
 int acl_authenticate(THD *thd, uint com_change_user_pkt_len);
 bool acl_getroot(Security_context *sctx, char *user, char *host,
                  char *ip, char *db);
 bool acl_check_host(const char *host, const char *ip);
 int check_change_password(THD *thd, const char *host, const char *user,
-                           char *password, uint password_len);
+                          char *password, uint password_len);
 bool change_password(THD *thd, const char *host, const char *user,
-		     char *password);
+                     char *password);
 bool mysql_grant(THD *thd, const char *db, List <LEX_USER> &user_list,
                  ulong rights, bool revoke, bool is_proxy);
 int mysql_table_grant(THD *thd, TABLE_LIST *table, List <LEX_USER> &user_list,
-                       List <LEX_COLUMN> &column_list, ulong rights,
-                       bool revoke);
+                      List <LEX_COLUMN> &column_list, ulong rights,
+                      bool revoke);
 bool mysql_routine_grant(THD *thd, TABLE_LIST *table, bool is_proc,
-			 List <LEX_USER> &user_list, ulong rights,
-			 bool revoke, bool write_to_binlog);
+                         List <LEX_USER> &user_list, ulong rights,
+                         bool revoke, bool write_to_binlog);
 my_bool grant_init();
 void grant_free(void);
 my_bool grant_reload(THD *thd);
 bool check_grant(THD *thd, ulong want_access, TABLE_LIST *tables,
                  bool any_combination_will_do, uint number, bool no_errors);
 bool check_grant_column (THD *thd, GRANT_INFO *grant,
-			 const char *db_name, const char *table_name,
-			 const char *name, uint length, Security_context *sctx);
-bool check_column_grant_in_table_ref(THD *thd, TABLE_LIST * table_ref,
+                         const char *db_name, const char *table_name,
+                         const char *name, uint length, Security_context *sctx);
+bool check_column_grant_in_table_ref(THD *thd, TABLE_LIST *table_ref,
                                      const char *name, uint length);
-bool check_grant_all_columns(THD *thd, ulong want_access, 
+bool check_grant_all_columns(THD *thd, ulong want_access,
                              Field_iterator_table_ref *fields);
 bool check_grant_routine(THD *thd, ulong want_access,
-			 TABLE_LIST *procs, bool is_proc, bool no_error);
-bool check_grant_db(THD *thd,const char *db);
+                         TABLE_LIST *procs, bool is_proc, bool no_error);
+bool check_grant_db(THD *thd, const char *db);
 ulong get_table_grant(THD *thd, TABLE_LIST *table);
 ulong get_column_grant(THD *thd, GRANT_INFO *grant,
                        const char *db_name, const char *table_name,
@@ -297,13 +297,13 @@ int fill_schema_user_privileges(THD *thd, TABLE_LIST *tables, Item *cond);
 int fill_schema_schema_privileges(THD *thd, TABLE_LIST *tables, Item *cond);
 int fill_schema_table_privileges(THD *thd, TABLE_LIST *tables, Item *cond);
 int fill_schema_column_privileges(THD *thd, TABLE_LIST *tables, Item *cond);
-int wild_case_compare(CHARSET_INFO *cs, const char *str,const char *wildstr);
+int wild_case_compare(CHARSET_INFO *cs, const char *str, const char *wildstr);
 int digest_password(THD *thd, LEX_USER *user_record);
 int check_password_strength(String *password);
 int check_password_policy(String *password);
 #ifdef NO_EMBEDDED_ACCESS_CHECKS
-#define check_grant(A,B,C,D,E,F) 0
-#define check_grant_db(A,B) 0
+    #define check_grant(A,B,C,D,E,F) 0
+    #define check_grant_db(A,B) 0
 #endif
 void close_acl_tables(THD *thd);
 
@@ -322,17 +322,17 @@ void close_acl_tables(THD *thd);
 */
 enum ACL_internal_access_result
 {
-  /**
-    Access granted for all the requested privileges,
-    do not use the grant tables.
-    This flag is used only for the INFORMATION_SCHEMA privileges,
-    for compatibility reasons.
-  */
-  ACL_INTERNAL_ACCESS_GRANTED,
-  /** Access denied, do not use the grant tables. */
-  ACL_INTERNAL_ACCESS_DENIED,
-  /** No decision yet, use the grant tables. */
-  ACL_INTERNAL_ACCESS_CHECK_GRANT
+    /**
+      Access granted for all the requested privileges,
+      do not use the grant tables.
+      This flag is used only for the INFORMATION_SCHEMA privileges,
+      for compatibility reasons.
+    */
+    ACL_INTERNAL_ACCESS_GRANTED,
+    /** Access denied, do not use the grant tables. */
+    ACL_INTERNAL_ACCESS_DENIED,
+    /** No decision yet, use the grant tables. */
+    ACL_INTERNAL_ACCESS_CHECK_GRANT
 };
 
 /**
@@ -344,30 +344,30 @@ enum ACL_internal_access_result
 class ACL_internal_table_access
 {
 public:
-  ACL_internal_table_access()
-  {}
+    ACL_internal_table_access()
+    {}
 
-  virtual ~ACL_internal_table_access()
-  {}
+    virtual ~ACL_internal_table_access()
+    {}
 
-  /**
-    Check access to an internal table.
-    When a privilege is granted, this method add the requested privilege
-    to save_priv.
-    @param want_access the privileges requested
-    @param [in, out] save_priv the privileges granted
-    @return
-      @retval ACL_INTERNAL_ACCESS_GRANTED All the requested privileges
-      are granted, and saved in save_priv.
-      @retval ACL_INTERNAL_ACCESS_DENIED At least one of the requested
-      privileges was denied.
-      @retval ACL_INTERNAL_ACCESS_CHECK_GRANT No requested privilege
-      was denied, and grant should be checked for at least one
-      privilege. Requested privileges that are granted, if any, are saved
-      in save_priv.
-  */
-  virtual ACL_internal_access_result check(ulong want_access,
-                                           ulong *save_priv) const= 0;
+    /**
+      Check access to an internal table.
+      When a privilege is granted, this method add the requested privilege
+      to save_priv.
+      @param want_access the privileges requested
+      @param [in, out] save_priv the privileges granted
+      @return
+        @retval ACL_INTERNAL_ACCESS_GRANTED All the requested privileges
+        are granted, and saved in save_priv.
+        @retval ACL_INTERNAL_ACCESS_DENIED At least one of the requested
+        privileges was denied.
+        @retval ACL_INTERNAL_ACCESS_CHECK_GRANT No requested privilege
+        was denied, and grant should be checked for at least one
+        privilege. Requested privileges that are granted, if any, are saved
+        in save_priv.
+    */
+    virtual ACL_internal_access_result check(ulong want_access,
+            ulong *save_priv) const = 0;
 };
 
 /**
@@ -383,35 +383,35 @@ public:
 class ACL_internal_schema_access
 {
 public:
-  ACL_internal_schema_access()
-  {}
+    ACL_internal_schema_access()
+    {}
 
-  virtual ~ACL_internal_schema_access()
-  {}
+    virtual ~ACL_internal_schema_access()
+    {}
 
-  /**
-    Check access to an internal schema.
-    @param want_access the privileges requested
-    @param [in, out] save_priv the privileges granted
-    @return
-      @retval ACL_INTERNAL_ACCESS_GRANTED All the requested privileges
-      are granted, and saved in save_priv.
-      @retval ACL_INTERNAL_ACCESS_DENIED At least one of the requested
-      privileges was denied.
-      @retval ACL_INTERNAL_ACCESS_CHECK_GRANT No requested privilege
-      was denied, and grant should be checked for at least one
-      privilege. Requested privileges that are granted, if any, are saved
-      in save_priv.
-  */
-  virtual ACL_internal_access_result check(ulong want_access,
-                                           ulong *save_priv) const= 0;
+    /**
+      Check access to an internal schema.
+      @param want_access the privileges requested
+      @param [in, out] save_priv the privileges granted
+      @return
+        @retval ACL_INTERNAL_ACCESS_GRANTED All the requested privileges
+        are granted, and saved in save_priv.
+        @retval ACL_INTERNAL_ACCESS_DENIED At least one of the requested
+        privileges was denied.
+        @retval ACL_INTERNAL_ACCESS_CHECK_GRANT No requested privilege
+        was denied, and grant should be checked for at least one
+        privilege. Requested privileges that are granted, if any, are saved
+        in save_priv.
+    */
+    virtual ACL_internal_access_result check(ulong want_access,
+            ulong *save_priv) const = 0;
 
-  /**
-    Search for per table ACL access rules by table name.
-    @param name the table name
-    @return per table access rules, or NULL
-  */
-  virtual const ACL_internal_table_access *lookup(const char *name) const= 0;
+    /**
+      Search for per table ACL access rules by table name.
+      @param name the table name
+      @return per table access rules, or NULL
+    */
+    virtual const ACL_internal_table_access *lookup(const char *name) const = 0;
 };
 
 /**
@@ -422,9 +422,9 @@ public:
 class ACL_internal_schema_registry
 {
 public:
-  static void register_schema(const LEX_STRING *name,
-                              const ACL_internal_schema_access *access);
-  static const ACL_internal_schema_access *lookup(const char *name);
+    static void register_schema(const LEX_STRING *name,
+                                const ACL_internal_schema_access *access);
+    static const ACL_internal_schema_access *lookup(const char *name);
 };
 
 const ACL_internal_schema_access *

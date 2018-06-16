@@ -30,26 +30,26 @@ public:
 
     bool pack_dynamic_ids(String *buffer)
     {
-      return(do_pack_dynamic_ids(buffer));
+        return(do_pack_dynamic_ids(buffer));
     }
 
     bool unpack_dynamic_ids(char *param_dynamic_ids)
     {
-      return(do_unpack_dynamic_ids(param_dynamic_ids));
+        return(do_unpack_dynamic_ids(param_dynamic_ids));
     }
 
     bool search_id(const void *id)
     {
-      return (do_search_id(id));
+        return (do_search_id(id));
     }
 
 protected:
     size_t size;
 
 private:
-    virtual bool do_pack_dynamic_ids(String *buffer)= 0;
-    virtual bool do_unpack_dynamic_ids(char *param_dynamic_ids)= 0;
-    virtual bool do_search_id(const void *id)= 0;
+    virtual bool do_pack_dynamic_ids(String *buffer) = 0;
+    virtual bool do_unpack_dynamic_ids(char *param_dynamic_ids) = 0;
+    virtual bool do_search_id(const void *id) = 0;
 };
 
 class Server_ids : public Dynamic_ids

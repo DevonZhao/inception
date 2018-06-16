@@ -21,38 +21,38 @@
 #include <mysql_version.h>
 
 #ifndef MYSQL_SERVER
-#define MYSQL_SERVER
+    #define MYSQL_SERVER
 #endif
 
 #if MYSQL_VERSION_ID >= 50501
-/* Include files for sql/ was split in 5.5, and ha_ndb*  uses a few.. */
-#include "sql_priv.h"
-#include "unireg.h"         // REQUIRED: for other includes
-#include "sql_table.h"      // build_table_filename,
-                            // tablename_to_filename,
-                            // filename_to_tablename
-#include "sql_partition.h"  // HA_CAN_*, partition_info, part_id_range
-#include "sql_base.h"       // close_cached_tables
-#include "discover.h"       // readfrm
-#include "sql_acl.h"        // wild_case_compare
-#include "transaction.h"
-#include "sql_test.h"       // print_where
-#include "key.h"            // key_restore
+    /* Include files for sql/ was split in 5.5, and ha_ndb*  uses a few.. */
+    #include "sql_priv.h"
+    #include "unireg.h"         // REQUIRED: for other includes
+    #include "sql_table.h"      // build_table_filename,
+    // tablename_to_filename,
+    // filename_to_tablename
+    #include "sql_partition.h"  // HA_CAN_*, partition_info, part_id_range
+    #include "sql_base.h"       // close_cached_tables
+    #include "discover.h"       // readfrm
+    #include "sql_acl.h"        // wild_case_compare
+    #include "transaction.h"
+    #include "sql_test.h"       // print_where
+    #include "key.h"            // key_restore
 #else
-#include "mysql_priv.h"
+    #include "mysql_priv.h"
 #endif
 
 #include "sql_show.h"       // init_fill_schema_files_row,
-                            // schema_table_store_record
+// schema_table_store_record
 
 
 #if MYSQL_VERSION_ID >= 50501
 
 /* my_free has lost last argument */
 static inline
-void my_free(void* ptr, myf MyFlags)
+void my_free(void *ptr, myf MyFlags)
 {
-  my_free(ptr);
+    my_free(ptr);
 }
 
 
@@ -61,7 +61,7 @@ static inline
 bool close_cached_tables(THD *thd, TABLE_LIST *tables, bool have_lock,
                          bool wait_for_refresh, bool wait_for_placeholders)
 {
-  return close_cached_tables(thd, tables, wait_for_refresh, LONG_TIMEOUT);
+    return close_cached_tables(thd, tables, wait_for_refresh, LONG_TIMEOUT);
 }
 
 /* thd has no version field anymore */
@@ -78,55 +78,55 @@ bool close_cached_tables(THD *thd, TABLE_LIST *tables, bool have_lock,
 extern ulong opt_server_id_mask;
 
 static inline
-uint32 thd_unmasked_server_id(const THD* thd)
+uint32 thd_unmasked_server_id(const THD *thd)
 {
 #ifndef NDB_WITHOUT_SERVER_ID_BITS
-  const uint32 unmasked_server_id = thd->unmasked_server_id;
-  assert(thd->server_id == (thd->unmasked_server_id & opt_server_id_mask));
-  return unmasked_server_id;
+    const uint32 unmasked_server_id = thd->unmasked_server_id;
+    assert(thd->server_id == (thd->unmasked_server_id & opt_server_id_mask));
+    return unmasked_server_id;
 #else
-  return thd->server_id;
+    return thd->server_id;
 #endif
 }
 
 
 /* extract the bitmask of options from THD */
 static inline
-ulonglong thd_options(const THD * thd)
+ulonglong thd_options(const THD *thd)
 {
 #if MYSQL_VERSION_ID < 50500
-  return thd->options;
+    return thd->options;
 #else
-  /* "options" has moved to "variables.option_bits" */
-  return thd->variables.option_bits;
+    /* "options" has moved to "variables.option_bits" */
+    return thd->variables.option_bits;
 #endif
 }
 
 /* set the "command" member of thd */
 static inline
-void thd_set_command(THD* thd, enum enum_server_command command)
+void thd_set_command(THD *thd, enum enum_server_command command)
 {
 #if MYSQL_VERSION_ID < 50600
-  thd->command = command;
+    thd->command = command;
 #else
-  /* "command" renamed to "m_command", use accessor function */
-  thd->set_command(command);
+    /* "command" renamed to "m_command", use accessor function */
+    thd->set_command(command);
 #endif
 }
 
 /* get pointer to diagnostic area for statement from THD */
 static inline
-Diagnostics_area* thd_stmt_da(THD* thd)
+Diagnostics_area *thd_stmt_da(THD *thd)
 {
 #if MYSQL_VERSION_ID < 50500
-  return &(thd->main_da);
+    return &(thd->main_da);
 #else
 #if MYSQL_VERSION_ID < 50603
-  /* "main_da" has been made private and one should use "stmt_da*" */
-  return thd->stmt_da;
+    /* "main_da" has been made private and one should use "stmt_da*" */
+    return thd->stmt_da;
 #else
-  /* "stmt_da*" has been made private and one should use 'get_stmt_da()' */
-  return thd->get_stmt_da();
+    /* "stmt_da*" has been made private and one should use 'get_stmt_da()' */
+    return thd->get_stmt_da();
 #endif
 #endif
 }
@@ -142,99 +142,99 @@ Diagnostics_area* thd_stmt_da(THD* thd)
 typedef pthread_mutex_t mysql_mutex_t;
 
 static inline
-int mysql_mutex_lock(mysql_mutex_t* mutex)
+int mysql_mutex_lock(mysql_mutex_t *mutex)
 {
-  return pthread_mutex_lock(mutex);
+    return pthread_mutex_lock(mutex);
 }
 
 static inline
-int mysql_mutex_unlock(mysql_mutex_t* mutex)
+int mysql_mutex_unlock(mysql_mutex_t *mutex)
 {
-  return pthread_mutex_unlock(mutex);
+    return pthread_mutex_unlock(mutex);
 }
 
 static inline
-void mysql_mutex_assert_owner(mysql_mutex_t* mutex)
+void mysql_mutex_assert_owner(mysql_mutex_t *mutex)
 {
-  return safe_mutex_assert_owner(mutex);
+    return safe_mutex_assert_owner(mutex);
 }
 
 typedef pthread_cond_t mysql_cond_t;
 
 static inline
-int mysql_cond_wait(mysql_cond_t* cond, mysql_mutex_t* mutex)
+int mysql_cond_wait(mysql_cond_t *cond, mysql_mutex_t *mutex)
 {
-  return pthread_cond_wait(cond, mutex);
+    return pthread_cond_wait(cond, mutex);
 }
 
 static inline
-int mysql_cond_timedwait(mysql_cond_t* cond, mysql_mutex_t* mutex,
-                         struct timespec* abstime)
+int mysql_cond_timedwait(mysql_cond_t *cond, mysql_mutex_t *mutex,
+                         struct timespec *abstime)
 {
-  return pthread_cond_timedwait(cond, mutex, abstime);
+    return pthread_cond_timedwait(cond, mutex, abstime);
 }
 
 #endif
 
 static inline
-uint partition_info_num_full_part_fields(const partition_info* part_info)
+uint partition_info_num_full_part_fields(const partition_info *part_info)
 {
 #if MYSQL_VERSION_ID < 50500
-  return part_info->no_full_part_fields;
+    return part_info->no_full_part_fields;
 #else
-  /* renamed to 'num_full_part_fields' and no accessor function*/
-  return part_info->num_full_part_fields;
+    /* renamed to 'num_full_part_fields' and no accessor function*/
+    return part_info->num_full_part_fields;
 #endif
 }
 
 static inline
-uint partition_info_num_parts(const partition_info* part_info)
+uint partition_info_num_parts(const partition_info *part_info)
 {
 #if MYSQL_VERSION_ID < 50500
-  return part_info->no_parts;
+    return part_info->no_parts;
 #else
-  /* renamed to 'num_parts' and no accessor function */
-  return part_info->num_parts;
+    /* renamed to 'num_parts' and no accessor function */
+    return part_info->num_parts;
 #endif
 }
 
 static inline
-uint partition_info_num_list_values(const partition_info* part_info)
+uint partition_info_num_list_values(const partition_info *part_info)
 {
 #if MYSQL_VERSION_ID < 50500
-  return part_info->no_list_values;
+    return part_info->no_list_values;
 #else
-  /* renamed to 'num_list_values' and no accessor function */
-  return part_info->num_list_values;
+    /* renamed to 'num_list_values' and no accessor function */
+    return part_info->num_list_values;
 #endif
 }
 
 static inline
-bool partition_info_use_default_num_partitions(const partition_info* part_info)
+bool partition_info_use_default_num_partitions(const partition_info *part_info)
 {
 #if MYSQL_VERSION_ID < 50500
-  return part_info->use_default_no_partitions;
+    return part_info->use_default_no_partitions;
 #else
-  /* renamed to 'use_default_num_partitions' and no accessor function */
-  return part_info->use_default_num_partitions;
+    /* renamed to 'use_default_num_partitions' and no accessor function */
+    return part_info->use_default_num_partitions;
 #endif
 }
 
 static inline
-uint partition_info_num_subparts(const partition_info* part_info)
+uint partition_info_num_subparts(const partition_info *part_info)
 {
 #if MYSQL_VERSION_ID < 50500
-  return part_info->no_subparts;
+    return part_info->no_subparts;
 #else
-  /* renamed to 'num_subparts' and no accessor function */
-  return part_info->num_subparts;
+    /* renamed to 'num_subparts' and no accessor function */
+    return part_info->num_subparts;
 #endif
 }
 
 #if MYSQL_VERSION_ID >= 50600
 
-/* New multi range read interface replaced original mrr */
-#define NDB_WITH_NEW_MRR_INTERFACE
+    /* New multi range read interface replaced original mrr */
+    #define NDB_WITH_NEW_MRR_INTERFACE
 
 #endif
 
